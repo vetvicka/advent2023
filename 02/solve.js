@@ -59,41 +59,44 @@ function sumValidGameNumbers(games, ruleSet) {
 
 }
 
+function findMinSet(sets) {
+    const res = {
+        red: 0,
+        green: 0,
+        blue: 0,
+    }
+    sets.forEach(set => {
+        Object.entries(set).forEach(([color, count]) => {
+            res[color] = Math.max(res[color], count);
+        })
+    })
+    return res;
+}
+
+function setPower(set) {
+    return (set.red || 1) * (set.green || 1) * (set.blue || 1);
+}
+
+function sumGamesPowers(games) {
+    return games.reduce((acc, curr) => {
+        return acc + setPower(findMinSet(curr.sets));
+    }, 0);
+
+}
+
 function main(fileContents) {
-    console.log(parseSet('19 green, 5 red, 23 yellow'))
-
-    // console.log(parseFile(fileContents));
-
     const ruleSet = {
         red: 12,
         green: 13,
         blue: 14,
     }
 
-    console.log('isValidSet', isValidSet({
-        // red: 12,
-        // green: 15,
-        blue: 12,
-    }, ruleSet));
-
-    testSet = {
-        // red: 12,
-        // green: 15,
-        blue: 16,
-    }
-
-    const testGame = {
-        number: 5,
-        sets: [testSet]
-    }
-
-    console.log('isValidGame', isValidGame(testGame, ruleSet));
-
 
     const parsed = parseFile(fileContents);
     const result = sumValidGameNumbers(parsed, ruleSet);
     console.log("result: ", result);
 
+    console.log('sumGamesPowers', sumGamesPowers(parsed))
 }
 
 fs.readFile(filePath, 'utf8', (err, data) => {
