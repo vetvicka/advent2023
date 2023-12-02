@@ -12,7 +12,11 @@ function parseSet(setText) {
                 count: parseInt(count),
                 color,
             }
-        });
+        })
+        .reduce((acc, curr) => {
+            acc[curr.color] = curr.count;
+            return acc;
+        }, {})
 }
 
 function parseLine(line) {
@@ -34,10 +38,61 @@ function parseFile(fileContents) {
         .map(parseLine);
 }
 
-function main(fileContents) {
-    console.log(parseSet('19 green, 5 red'))
+function isValidSet(set, ruleSet) {
+    return Object.entries(set).every(([color, count]) => {
+        return ruleSet[color] >= count;
+    });
+}
 
-    console.log(parseFile(fileContents));
+function isValidGame(game, ruleSet) {
+    return game.sets.every(set => isValidSet(set, ruleSet));
+}
+
+function sumValidGameNumbers(games, ruleSet) {
+    return games
+        .reduce((acc, curr) => {
+            if (!isValidGame(curr, ruleSet)) {
+                return acc;
+            }
+            return acc + curr.number;
+        }, 0);
+
+}
+
+function main(fileContents) {
+    console.log(parseSet('19 green, 5 red, 23 yellow'))
+
+    // console.log(parseFile(fileContents));
+
+    const ruleSet = {
+        red: 12,
+        green: 13,
+        blue: 14,
+    }
+
+    console.log('isValidSet', isValidSet({
+        // red: 12,
+        // green: 15,
+        blue: 12,
+    }, ruleSet));
+
+    testSet = {
+        // red: 12,
+        // green: 15,
+        blue: 16,
+    }
+
+    const testGame = {
+        number: 5,
+        sets: [testSet]
+    }
+
+    console.log('isValidGame', isValidGame(testGame, ruleSet));
+
+
+    const parsed = parseFile(fileContents);
+    const result = sumValidGameNumbers(parsed, ruleSet);
+    console.log("result: ", result);
 
 }
 
