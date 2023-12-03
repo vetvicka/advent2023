@@ -17,11 +17,7 @@ function isValidNumber(number, x, y, data) {
     const colIndexMin = Math.max(x - 1, 0);
     const rowIndexMax = Math.min(y + 2, data.length);
     const rowIndexMin = Math.max(y - 1, 0);
-    console.log(
-        "colIndexMax: " + colIndexMax,
-        "colIndexMin: " + colIndexMin,
-        "rowIndexMax: " + rowIndexMax,
-        "rowIndexMin: " + rowIndexMin,)
+
     for (let rowIndex = rowIndexMin; rowIndex < rowIndexMax; rowIndex++) {
         for (let colIndex = colIndexMin; colIndex < colIndexMax; colIndex++) {
             if (isSymbol(data[rowIndex][colIndex])) {
@@ -30,6 +26,31 @@ function isValidNumber(number, x, y, data) {
         }
     }
     return false;
+}
+
+const gearMap = {}
+
+function recordGears(number, x, y, data) {
+    const colIndexMax = Math.min(x + number.length + 1, data[0].length);
+    const colIndexMin = Math.max(x - 1, 0);
+    const rowIndexMax = Math.min(y + 2, data.length);
+    const rowIndexMin = Math.max(y - 1, 0);
+
+    for (let rowIndex = rowIndexMin; rowIndex < rowIndexMax; rowIndex++) {
+        for (let colIndex = colIndexMin; colIndex < colIndexMax; colIndex++) {
+            if (data[rowIndex][colIndex] === '*') {
+                const gearIndex = rowIndex + ',' + colIndex
+                gearMap[gearIndex] = gearMap[gearIndex] || [];
+                gearMap[gearIndex].push(parseInt(number));
+            }
+        }
+    }
+}
+
+function getGearsDataFromLine(line, y, data) {
+    const matches = [...line.matchAll(/\d+/g)];
+    matches
+        .filter(match => recordGears(match[0], match.index, y, data))
 }
 
 function getValidNumbersFromLine(line, y, data) {
@@ -42,14 +63,19 @@ function getValidNumbersFromLine(line, y, data) {
 function main(fileContents) {
     const parsed = parseFile(fileContents);
 
-    console.log('regex test', ...parsed[0].matchAll(/\d+/g))
-
     const numbers = parsed.map(getValidNumbersFromLine);
 
     console.log(numbers
         .flatMap(x => x)
         .reduce((acc, curr) => acc + curr, 0)
     );
+
+    parsed.forEach(getGearsDataFromLine);
+    const gearRatiosSum = Object.entries(gearMap)
+        .filter(([_, gears]) => gears.length == 2)
+        .map(([_, gears]) => gears[0] * gears[1])
+        .reduce((acc, curr) => acc + curr, 0);
+    console.log(gearRatiosSum);
 }
 
 fs.readFile(filePath, 'utf8', (err, data) => {
