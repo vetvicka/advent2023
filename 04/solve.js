@@ -18,6 +18,7 @@ function parseCard(cardText) {
       })
 
     return {
+      count: 1,
       winNumbers,
       tipNumbers,
     }
@@ -41,7 +42,20 @@ function main(fileContents) {
     const points = cards.map(countCardPoints)
       .map(points => points ? Math.pow(2, points - 1) : 0)
       .reduce((acc, curr) => acc + curr, 0)
-    console.log(points);
+    console.log('part1: ', points);
+
+    for(let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      const points = countCardPoints(card);
+      if (points === 0) {
+        continue;
+      }
+      for (let j = i + 1; j <= Math.min(cards.length - 1, i + points); j++) {
+        cards[j].count += card.count;
+      }
+    }
+    const cardsCount = cards.reduce((acc, curr) => acc + curr.count, 0);
+    console.log('part2: ', cardsCount);
 }
 
 fs.readFile(filePath, 'utf8', (err, data) => {
