@@ -14,7 +14,18 @@ function parseMapLine(line) {
     range: [sourceStart, sourceStart + rangeLen - 1],
     offset: destinationStart - sourceStart,
     lineText: line,
+    reverseRange: [destinationStart, destinationStart + rangeLen - 1],
   }
+}
+
+function parseSeedsRanges(seeds) {
+  const res = [];
+  for (let index = 0; index < seeds.length; index+=2) {
+    const rangeStart = seeds[index];
+    const rangeEnd = rangeStart + seeds[index + 1] - 1;
+    res.push([rangeStart, rangeEnd])
+  }
+  return res
 }
 
 function parseFile(fileContents) {
@@ -33,8 +44,11 @@ function parseFile(fileContents) {
     maps.forEach(map => {
       map.lines = map.lines.map(parseMapLine);
     })
+    const seeds = parseSeeds(seedsInput);
+    const seedsRanges = parseSeedsRanges(seeds)
     return {
-      seeds: parseSeeds(seedsInput),
+      seeds,
+      seedsRanges,
       maps,
     }
         
@@ -44,8 +58,8 @@ function isInRange(value, range) {
     return value >= range[0] && value <= range[1];
 }
 
-function findRange(value, map) {
-    return map.lines.find(line => isInRange(value, line.range));
+function findRange(value, map, isReverse = false) {
+    return map.lines.find(line => isInRange(value, isReverse ? line.reverseRange : line.range));
 }
 
 function traverseMaps(value, maps) {
@@ -58,13 +72,43 @@ function traverseMaps(value, maps) {
   }, value);
 }
 
+function traverseMapsReverse(value, maps) {
+  return [...maps].reverse().reduce((acc, map) => {
+    const range = findRange(acc, map, true);
+    if (range) {
+      return acc - range.offset;
+    }
+    return acc;
+  }, value);
+}
+
+function findLowestLocation(parsed, step = 1000, startLocation = 0) {
+  const iterationLimit = 31599214;
+  for (let loc = startLocation; loc < iterationLimit + 10; loc+=step) {
+    if (loc > iterationLimit) {
+      throw new Error('iteration limit exceeded')
+    }
+    const locationSeed = traverseMapsReverse(loc, parsed.maps);
+    const rangeFound = parsed.seedsRanges.find(range => isInRange(locationSeed, range))
+    if (rangeFound){
+      if (step > 1) {
+        return findLowestLocation(parsed, 1, loc - step);
+      }
+      return loc;
+    }
+  }
+  return "no location found"
+}
+
 function main(fileContents) {
     const parsed = parseFile(fileContents);
 
     const seedResults = parsed.seeds
       .map(seed => traverseMaps(seed, parsed.maps))
       .sort((a, b) => a - b);
-    console.log('lowest seedResult', seedResults[0])
+    console.log('part1: lowest seedResult', seedResults[0])
+
+    console.log('part2: lowest location', findLowestLocation(parsed))
 }
 
 fs.readFile(filePath, 'utf8', (err, data) => {
