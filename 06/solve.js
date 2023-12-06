@@ -6,6 +6,12 @@ function parseLine(lineText) {
   return [...lineText.matchAll(/(\d+)/g)].map(match => parseInt(match[0]));
 }
 
+function parseLine2(lineText) {
+  const numberText = parseLine(lineText)
+    .reduce((acc, curr) => acc + curr, '');
+    return [parseInt(numberText)];
+}
+
 function zipLines(lines) {
     const zipped = [];
     const [times, distances] = lines;
@@ -19,11 +25,19 @@ function zipLines(lines) {
 }
 
 function parseFile(fileContents) {
-    const lines = fileContents.split('\n');
-    const parsedLines = lines
+    const lines = fileContents.split('\n')
         .filter(line => line.length > 0)
-        .map(parseLine)
-    return zipLines(parsedLines)
+        
+    const part1 = zipLines(lines
+        .map(parseLine))
+
+    const part2 = zipLines(lines
+      .map(parseLine2))
+
+    return {
+      part1,
+      part2,
+    }
 }
 
 function calcDistance(chargeTime, raceTime) {
@@ -48,8 +62,11 @@ function numberOfWinningChargeTimes(races) {
 
 function main(fileContents) {
     const parsed = parseFile(fileContents);
-    const part1 = numberOfWinningChargeTimes(parsed);
+    const part1 = numberOfWinningChargeTimes(parsed.part1);
     console.log(`Part 1: ${part1}`);
+
+    const part2 = numberOfWinningChargeTimes(parsed.part2);
+    console.log('Part 2:', part2);
 }
 
 fs.readFile(filePath, 'utf8', (err, data) => {
