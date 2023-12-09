@@ -31,9 +31,23 @@ function sumDiffs(diffs: number[][]) {
     }, 0)
 }
 
-const result = parsed
-    .map(calcDiffs)
+function sumDiffs2(diffs: number[][]) {
+    return diffs.reduceRight((acc, curr) => {
+        return curr[0] - acc;
+    }, 0)
+}
+
+const diffs = parsed
+    .map(calcDiffs);
+
+const part1 = diffs
     .map(sumDiffs)
     .reduce((acc, curr) => acc + curr, 0);
 
-console.log("part1: ", result);
+const part2 = diffs
+    .map(sumDiffs2)
+    .reduce((acc, curr) => acc + curr, 0);
+
+console.log("part1: ", part1);
+
+console.log("part2: ", part2);
