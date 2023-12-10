@@ -34,7 +34,8 @@ function connections(pipe: string) {
         case 'F':
             return [down, right]
         case 'S':
-            return [left, right] // TODO: lazy
+            return [left, right] // input
+            // return [down, right] // example
         default:
             throw new Error(`Unknown pipe: ${pipe}`)
     }
@@ -71,5 +72,43 @@ for (let i = 0; i < iterationLimit; i++) {
     history.push(next);
 }
 
+history.forEach(pos => {
+    const pipe = parsed[pos[0]][pos[1]]
+    if (["|", "L", "J"].includes(pipe)) {
+        parsed[pos[0]][pos[1]] = 'X'
+    } else {
+        parsed[pos[0]][pos[1]] = 'x'
+    }
+})
 
 console.log("part1: ", history.length / 2)
+
+function countLoopCrossings(currentPos: number[], pipes: string[][]) {
+    let counter = 0;
+    for(let i = currentPos[1]; i >= 0; i--) {
+        if (pipes[currentPos[0]][i] === 'X') {
+            counter++;
+        }
+    } 
+    return counter;
+}
+
+let part2 = 0;
+for (let line = 0; line < parsed.length; line++) {
+    for (let col = 0; col < parsed[0].length; col++) {
+        if (["x", "X", "S"].includes(parsed[line][col])) {
+            continue;
+        }
+        const crossings = countLoopCrossings([line, col], parsed);
+        if (crossings % 2 === 1) {
+            part2++;
+            parsed[line][col] = 'I'
+        } else {
+            parsed[line][col] = 'O'
+        }
+    }
+    const element = parsed[line];
+}
+
+console.log("part2: ", part2)
+    
