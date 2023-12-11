@@ -1,6 +1,6 @@
 import fs from 'fs';
 
-const expansionSymbol = '.';
+const expansionSymbol = '*';
 
 function expandLines(lines: string[][]) {
     for (let i = 0; i < lines.length; i++) {
@@ -9,8 +9,7 @@ function expandLines(lines: string[][]) {
             continue;
         }
         const emptyLine = new Array(line.length).fill(expansionSymbol);
-        lines.splice(i, 0, emptyLine);
-        i += 1;
+        lines.splice(i, 1, emptyLine);
     }
 }
 
@@ -27,9 +26,8 @@ function expandColumns(lines: string[][]) {
             continue;
         }
         for (let line = 0; line < lines.length; line++) {
-            lines[line].splice(col, 0, expansionSymbol);
+            lines[line].splice(col, 1, expansionSymbol);
         }
-        col += 1;
     }
 }
 

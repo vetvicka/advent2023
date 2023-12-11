@@ -25,21 +25,38 @@ function allGalaxyPairs(galaxies: position[]) {
     return result;
 }
 
-function distance(a: position, b: position) {
-    return Math.abs(a[0] - b[0]) + Math.abs(a[1] - b[1]);
+function distance(a: position, b: position, lines: string[][], expansionMultiplier = 2) {
+    let lineDistance = 0;
+    let colDistance = 0;
+    const lineFrom = Math.min(a[0], b[0]);
+    const lineTo = Math.max(a[0], b[0]);
+    const colFrom = Math.min(a[1], b[1]);
+    const colTo = Math.max(a[1], b[1]);
+
+    for (let line = lineFrom; line < lineTo; line++) {
+        lineDistance += lines[line][a[1]] === '*' ? expansionMultiplier : 1;
+    }
+    for (let col = colFrom; col < colTo; col++) {
+        colDistance += lines[a[0]][col] === '*' ? expansionMultiplier : 1;
+    }
+    return lineDistance + colDistance;
 }
 
 function solveFile(filePath: string) {
     const parsed = parseFile(filePath);
-    // console.log(parsed.map(line => line.join('')).join('\n')) 
 
     const galaxies = allGalaxies(parsed);
     const pairs = allGalaxyPairs(galaxies);
     const sumAll = pairs
-        .map(pair => distance(pair[0], pair[1]))
+        .map(pair => distance(pair[0], pair[1], parsed))
+        .reduce((a, b) => a + b, 0);
+
+    const sumAll2 = pairs
+        .map(pair => distance(pair[0], pair[1], parsed, 1000000))
         .reduce((a, b) => a + b, 0);
 
     console.log("part1: ", sumAll);
+    console.log("part2: ", sumAll2);
 }
 
 solveFile('input.txt');
