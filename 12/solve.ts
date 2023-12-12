@@ -1,21 +1,7 @@
-import { parseFile } from './parse'
+import { memoize } from 'lodash';
+import { parseFile, timesFive } from './parse'
 
 const parsed = parseFile('input.txt');
-
-function isValid(row: string, groups: number[]) {
-    let index = 0;
-    return groups.every(group => {
-        const firstSpring = row.indexOf("#", index);
-
-        for (let i = firstSpring; i < firstSpring + group; i++) {
-            if (row[i] !== "#") {
-                return false;
-            }
-        }
-        index = firstSpring + group;
-        return row[firstSpring + group] === "." || (firstSpring + group) === row.length;
-    })
-}
 
 function minGroupsLength(groupStrings: string[]) {
     return groupStrings.reduce((acc, group) => acc + group.length, 0);
@@ -36,6 +22,43 @@ function possiblePlacements(totalLength: number, springsToPlace: string, restOfG
 
     return results;
 }
+
+const numberOfPlacements = memoize((row: string, groups: number[], matchLength: number = 0): number => {
+    const current = row[0];
+    if (matchLength > groups[0]) { 
+        return 0;
+    }
+    if (!current) {
+        if (groups.length === 1 && matchLength === groups[0]) {
+            return 1;
+        }
+        if (groups.length === 0 && matchLength === 0) { 
+            return 1
+        }
+        return 0;
+    }
+
+    const rest = row.slice(1);
+    function leDot() {
+        if (matchLength === groups[0]) {
+            return numberOfPlacements(rest, groups.slice(1), 0);
+        }
+        if (matchLength === 0) {
+            return numberOfPlacements(rest, groups, 0);
+        }
+        return 0;
+    }
+    if (current === "#") {
+        return numberOfPlacements(rest, groups, matchLength + 1);
+    }
+    if (current === ".") {
+        return leDot();
+    }
+    if (current === "?") {
+        return numberOfPlacements(rest, groups, matchLength + 1) + leDot();
+    }
+    return 0;
+}, (row: string, groups: number[], matchLength) => `${row} ${groups.join(",")} ${matchLength}`);
 
 function isPermutationValidForRow(row: string, perm: string) {
     for (let i = 0; i < row.length; i++) {
@@ -60,3 +83,12 @@ const part1 = parsed
     .reduce((acc, val) => acc + val, 0);
 
 console.log("part1", part1)
+
+const parsed2 = timesFive(parsed);
+
+const part2 = parsed2
+    .map(({row, groups}) => numberOfPlacements(row, groups))
+    .reduce((acc, val) => acc + val, 0);
+
+console.log("part2: ", part2)
+

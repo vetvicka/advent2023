@@ -26,4 +26,3 @@ export function timesFive(parsed: {row: string, groups: number[]}[]) {
     })  
 }
 
-// console.log(parseFile('input.txt'));
