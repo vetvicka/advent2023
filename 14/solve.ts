@@ -39,7 +39,65 @@ function sumRocks(map: string[][]){
     }, 0);
 }
 
-rollAll(parsed);
 
+
+function rotateMap(map: string[][]){
+    const rotated: string[][] = [];
+    for(let i = 0; i < map[0].length; i++){
+        rotated[i] = [];
+        for(let j = map.length - 1; j >= 0; j--){
+            rotated[i].push(map[j][i]);
+        }
+    }
+    return rotated;
+}
+
+let prev = 0;
+let rotatedMap: string[][];
+function cycle(){
+    for(let i = 0; i < 4; i++){
+        rollAll(rotatedMap);
+        rotatedMap = rotateMap(rotatedMap);
+    }
+    return sumRocks(rotatedMap);
+}
+
+function infiniteCycle(map: string[][]) {
+    rotatedMap = map;
+    let cycleCount = 1;
+    const history: number[][] = [];
+    let double: number;
+    while(true) {
+        const current = cycle();
+        if (cycleCount > 1000) {
+            history.push([cycleCount, current]);
+        }
+        if (cycleCount > 2000) {
+            break;
+        }
+        cycleCount++;
+        if (current === prev) {
+            double = current;
+        }
+        prev = current;
+    }
+    const recentHistory = history.slice(-100);
+    const first = recentHistory.findIndex(([cycle, sum]) => sum === double);
+    const second = recentHistory.findIndex(([cycle, sum], i) => i > first + 1 && sum === double );
+    const interval = second - first;
+
+    let totalCycles = 1000000000;
+    while(totalCycles > 2000){
+        totalCycles -= interval;
+    }
+    const res = history.find(([cycle, sum]) => cycle === totalCycles);
+
+    return res![1];
+}
+
+
+rollAll(parsed);
 console.log("part1: ", sumRocks(parsed))
 
+const parsed2 = parseFile('input.txt');
+console.log("part2: ", infiniteCycle(parsed2))
