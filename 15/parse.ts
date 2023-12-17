@@ -1,0 +1,8 @@
+import fs from 'fs';
+
+export function parseFile(filePath: string) {
+    const fileContents = fs.readFileSync(filePath, 'utf8');
+    const lines = fileContents.split(',');
+    return lines
+        .filter(line => line.length > 0)
+}
