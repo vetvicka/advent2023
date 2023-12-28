@@ -104,9 +104,9 @@ const energize = memoize(({direction, x, y}, energizedTiles, steps) => {
     steps.push({direction, x, y});
 }, ({direction, x, y}) => `${x},${y} ${direction}`);
 
-function solve(map: Tile[][]) {
+function solve(map: Tile[][], initialStep = {direction: Direction.Right, x: -1, y: 0}) {
     const energizedTiles = map.map(row => row.map(() => 0));
-    const steps = [{direction: Direction.Right, x: -1, y: 0}];
+    const steps = [initialStep];
     energize.cache.clear?.();
     while (steps.length > 0) {
         const step = steps.pop();
@@ -119,4 +119,19 @@ function solve(map: Tile[][]) {
     return energizedTiles.reduce((sum, row) => sum + row.reduce((sum, tile) => sum + tile, 0), 0);
 }
 
+function solve2(map: Tile[][]) {
+    const allInitialSteps: any[] = []
+    for (let i = 0; i < map.length; i++) {
+        allInitialSteps.push({direction: Direction.Right, x: -1, y: i})
+        allInitialSteps.push({direction: Direction.Left, x: map[i].length, y: i})
+    }
+    for (let i = 0; i < map[0].length; i++) {
+        allInitialSteps.push({direction: Direction.Down, x: i, y: -1})
+        allInitialSteps.push({direction: Direction.Up, x: i, y: map.length})
+    }
+    return allInitialSteps.map((step) => solve(map, step))
+        .reduce((max, sum) => Math.max(max, sum), 0);
+}
+
 console.log('part1: ', solve(parsed))
+console.log('part2: ', solve2(parsed))
