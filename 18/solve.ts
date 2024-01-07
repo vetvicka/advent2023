@@ -1,66 +1,6 @@
-import { parseFile, parseFile2, Direction } from './parse'
+import { parseFile, parseFile2, normalizeMapDimensions, Instruction, mapDimensions, Line, Direction } from './parse'
 
 const parsed = parseFile('input.txt');
-
-type Instruction = {
-    direction: Direction;
-    length: number;
-    color: string;
-
-}
-
-function normalizeMapDimensions(maxDimensions: {[key in Direction]: number}) {
-    return {
-        map: {
-            y: maxDimensions.U - maxDimensions.D + 1, // +1 because 0 is a valid coordinate
-            x: maxDimensions.R - maxDimensions.L + 1,
-        },
-        startingPosition: {
-            y: maxDimensions.U,
-            x: -maxDimensions.L,
-        }
-    };
-}
-
-function mapDimensions(instructions: Instruction[]) {
-    const maxDimensions = {
-        U: 0,
-        R: 0,
-        D: 0,
-        L: 0,
-    }
-    const current = { x: 0, y: 0 };
-
-    instructions.forEach(instruction => {
-        switch (instruction.direction) {
-            case 'U':
-                current.y += instruction.length;
-                if (current.y > maxDimensions.U) {
-                    maxDimensions.U = current.y;
-                }
-                break;
-            case 'R':
-                current.x += instruction.length;
-                if (current.x > maxDimensions.R) {
-                    maxDimensions.R = current.x;
-                }
-                break;
-            case 'D':
-                current.y -= instruction.length;
-                if (current.y < maxDimensions.D) {
-                    maxDimensions.D = current.y;
-                }
-                break;
-            case 'L':
-                current.x -= instruction.length;
-                if (current.x < maxDimensions.L) {
-                    maxDimensions.L = current.x;
-                }
-                break;
-        }
-    });
-    return maxDimensions;
-}
 
 function drawMap(map: string[][]) {
     return;
@@ -134,7 +74,7 @@ function digInsideTrenches(map: string[][], x: number, y: number) {
             newNeighbours.forEach(neighbour => {
                 map[neighbour.y][neighbour.x] = '?';
                 neighbours.push(neighbour);
-                allTiles.push(neighbour); // TODO
+                allTiles.push(neighbour);
                 if (isEdgeOfMap(map, neighbour.x, neighbour.y)) {
                     isInsideTrench = false;
                 }
@@ -155,7 +95,6 @@ function traverseMap(map: string[][]) {
 }
 
 function solve(name: string, parsed: Instruction[]) {
-    // return
     const dimensions = mapDimensions(parsed);
     const normalised = normalizeMapDimensions(dimensions);
     const map = initMap(normalised.map.x, normalised.map.y);
@@ -169,7 +108,77 @@ function solve(name: string, parsed: Instruction[]) {
     console.log(`${name}: `, answer)
 }
 
-solve("part 1", parsed)
+function isLineInRange(line: Line, y: number) {
+    return line.y1 <= y && line.y2 >= y;
+}
 
-const parsed2 = parseFile2('example2.txt');
-// solve("part 2", parsed2)
+function lineDirection(line: Line, y: number) {
+    if (line.y1 !== y && line.y2 !== y) {
+        return null
+    }
+    if (line.y1 === y && line.y2 < y) { return "U"; }
+    if (line.y2 === y && line.y1 < y) { return "U"; }
+    return "D";
+}
+
+function solve2(parsed: ReturnType<typeof parseFile2>) {
+    const {lines, dimensions} = parsed;
+    let result = 0;
+    let progress;
+    for(let i = 0; i < dimensions.y; i++) {
+        const relevantLines = lines.filter(line => isLineInRange(line, i));
+        if (!relevantLines.length) {
+            continue;
+        }
+        let lineResult = 0
+        
+
+        while (relevantLines.length) {
+            let from = relevantLines.shift()!;
+            let to: Line | null = null;
+            let prevDirection: Direction | null = lineDirection(from, i);
+            let ups = 0;
+            let downs = 0;
+            if (prevDirection) {
+                prevDirection === 'U' ? ups++ : downs++;
+            } else {
+                ups++;
+                downs++;
+            }
+            while (relevantLines.length) {
+                to = relevantLines.shift()!;
+                if (to.y1 !== i && to.y2 !== i) {
+                    break;
+                }
+                let direction: Direction | null = lineDirection(to, i);
+                if (direction) {
+                    direction === 'U' ? ups++ : downs++;
+                }
+                if (ups % 2 === 0 && downs % 2 === 0) {
+                    break;
+                }
+            }
+            if (!to) {
+                throw new Error('oooops');
+            }
+            lineResult += to.x - from.x + 1;
+        }
+        if (i % 1000 === 0) {
+            const newProgress = Math.round(i / dimensions.y * 100);
+            if (newProgress !== progress && newProgress % 10 === 0) {
+                progress = newProgress;
+                console.log('Progress: ', progress)
+            }
+        }
+        result += lineResult;
+    }
+
+    console.log('part 2: ', result)
+}
+
+
+
+const parsed2 = parseFile2('input.txt');
+solve2(parsed2)
+
+solve("part 1", parsed)
