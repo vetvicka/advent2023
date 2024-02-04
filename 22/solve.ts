@@ -74,15 +74,32 @@ function largestPossibleFall(brick: Brick, bricks: Brick[]) {
     return Math.max(minZ - maxZ - 1, 1);
 }
 
+function makeEmFall(originalBricks: Brick[]) {
+    const bricks: Brick[] = originalBricks.map(brick => brick.map(p => ({...p})) as Brick);
+    const fallenBricks = new Set<number>();
+    let counter = 0;
+    while(true) {
+        let brickFell = false;
+        for (let i = 0; i < bricks.length; i++) {
+            if (canBrickFall(bricks[i], bricks)) {
+                const delta = largestPossibleFall(bricks[i], bricks);
+                bricks[i][0].z -= delta;
+                bricks[i][1].z -= delta;
+                brickFell = true;
+                fallenBricks.add(i);
+            }
+        }
+
+        if(!brickFell || counter++ > 10) {
+            break;
+        }
+    }
+    return fallenBricks.size
+}
+
 function solve() {
     bricks.sort((a, b) => a[0].z - b[0].z);
-
-    let fallCounter = 0;
     while(true) {
-        fallCounter++;
-        if (fallCounter % 10000 === 0) {
-            console.log("fallCounter", fallCounter);
-        }
         let brickFell = false;
         for (let i = 0; i < bricks.length; i++) {
             if (canBrickFall(bricks[i], bricks)) {
@@ -98,13 +115,26 @@ function solve() {
             break;
         }
     }
-    console.log("falling done")
 
-    const removableBricksCounts = bricks.reduce((acc, brick) => {
-        return acc + (canBeRemoved(brick, bricks) ? 1 : 0);
+    const unRemovableBricks: number[] = [];
+    const removableBricksCounts = bricks.reduce((acc, brick, index) => {
+        if (canBeRemoved(brick, bricks)) {
+            return acc + 1;
+        }
+        unRemovableBricks.push(index);
+        return acc;
     }, 0);
 
-    console.log(removableBricksCounts);
+    console.log("part 1: ", removableBricksCounts);
+
+    const chainReactions = unRemovableBricks.map(index => {
+        const bricksAfterRemoval = bricks.filter((_, i) => i !== index);
+        return makeEmFall(bricksAfterRemoval);
+    });
+
+    const sumOfChainReactions = chainReactions.reduce((acc, x) => acc + x, 0);
+
+    console.log("part 2: ", sumOfChainReactions);
 }
 
 solve();
